@@ -202,7 +202,7 @@ module Resque
         end
         failed!
       else
-        log "done: #{job.inspect}"
+        log "done: #{string_truncate(job.inspect)}"
       ensure
         yield job if block_given?
       end
@@ -444,7 +444,7 @@ module Resque
     def run_hook(name, *args)
       return unless hooks = Resque.send(name)
       msg = "Running #{name} hooks"
-      msg << " with #{args.inspect}" if args.any?
+      msg << " with #{string_truncate(args.inspect)}" if args.any?
       log msg
 
       hooks.each do |hook|

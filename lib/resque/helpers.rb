@@ -90,5 +90,10 @@ module Resque
       end
       constant
     end
+
+    def string_truncate(str)
+      return str if str.nil? || str.size <= 100
+      "#{str[0..100]}..."
+    end
   end
 end
