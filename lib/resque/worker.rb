@@ -135,7 +135,7 @@ module Resque
         break if shutdown?
 
         if not paused? and job = reserve
-          log "got: #{job.inspect}"
+          log "got: #{string_truncate(job.inspect)}"
           job.worker = self
           working_on job
 
