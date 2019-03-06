@@ -95,5 +95,9 @@ module Resque
       return str if str.nil? || str.size <= 100
       "#{str[0..100]}..."
     end
+
+    def elapsed_time(start)
+      (Time.now - start).round(3)
+    end
   end
 end

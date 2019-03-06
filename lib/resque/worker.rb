@@ -135,7 +135,7 @@ module Resque
         break if shutdown?
 
         if not paused? and job = reserve
-          log "got: #{string_truncate(job.inspect)}"
+          log(msg: 'got', **job.inspect_for_logger)
           job.worker = self
           working_on job
 
@@ -191,10 +191,11 @@ module Resque
     # Processes a given job in the child.
     def perform(job)
       begin
+        start = Time.now
         run_hook :after_fork, job if will_fork?
         job.perform
       rescue Object => e
-        log "#{job.inspect} failed: #{e.inspect}"
+        log(msg: "failed: #{e.inspect}", elapsed_time: elapsed_time(start), **job.inspect_for_logger)
         begin
           job.fail(e)
         rescue Object => e
@@ -202,7 +203,7 @@ module Resque
         end
         failed!
       else
-        log "done: #{string_truncate(job.inspect)}"
+        log(msg: 'done', elapsed_time: elapsed_time(start), **job.inspect_for_logger)
       ensure
         yield job if block_given?
       end
@@ -443,9 +444,16 @@ module Resque
     # Runs a named hook, passing along any arguments.
     def run_hook(name, *args)
       return unless hooks = Resque.send(name)
+
       msg = "Running #{name} hooks"
-      msg << " with #{string_truncate(args.inspect)}" if args.any?
-      log msg
+      if args.any? && args.all?(&Job.method(:===))
+        msg << " with #{args.map(&:queue)}"
+        # NOTE: only first job will be logged.
+        log(msg: msg, **args.first.inspect_for_logger)
+      else
+        msg << " with #{string_truncate(args.inspect)}" if args.any?
+        log msg
+      end
 
       hooks.each do |hook|
         args.any? ? hook.call(*args) : hook.call
